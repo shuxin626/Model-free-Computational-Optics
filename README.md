@@ -1,7 +1,7 @@
 # Model-free-Computational-Optics
 This repo is an opensource library for **model-free computational optics**. 
 
-Model-freee optimization optimizes the optical system $f_{sys}(x, w)$ without requiring an explicit model $\hat{f}_{sys}(x, w)$
+Model-free optimization optimizes the optical system $f_{sys}(x, w)$ without requiring an explicit model $\hat{f}_{sys}(x, w)$
 
 <p align="center"><img src="imgs/mfo_conceptual_plot.png" style="width:70%; border:0;"></p>
 
@@ -20,7 +20,7 @@ Model-freee optimization optimizes the optical system $f_{sys}(x, w)$ without re
 
 1. **Clone this repo**
 
-2. **Choose an optimization method for training** in `param/param_classification.py`:
+2. **Choose an optimization method for training** in `param/param_onn.py`:
     ```python
     settings['optimizer'] = 'mfo' # our method
     settings['optimizer'] = 'sbt' # simulator-based method
@@ -33,7 +33,7 @@ Model-freee optimization optimizes the optical system $f_{sys}(x, w)$ without re
    python main_onn.py
    ```
 
-4. **Set parameters for testing** in `param/param_classification.py`:
+4. **Set parameters for testing** in `param/param_onn.py`:
 
     ```python
     settings['train_or_test'] = 'test'

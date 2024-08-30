@@ -6,7 +6,7 @@ from actor.pg import PG
 from trainer.ideal_classification_trainer import IdealClassificationTrainer
 from trainer.mfo_classification_trainer import MFOClassificationTrainer
 from trainer.classification_tester import ClassificationTester
-from param.param_classification import settings, train_param, test_param, actor_param, ideal_optimizer_param, optics_param, optics_param_dummy, exp_param
+from param.param_onn import settings, train_param, test_param, actor_param, ideal_optimizer_param, optics_param, optics_param_dummy, exp_param
 from config import *
 
 def main_classification(settings, test_param, optics_param, train_param, ideal_optimizer_param, actor_param, exp_param, optics_param_dummy):
