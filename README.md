@@ -10,7 +10,7 @@ Model-free optimization optimizes the optical systems $f_{sys}(x, w)$ without re
 #### - Model-free Optimization for Optical Computing
 High-performance real-world optical computing trained by in situ gradient-based model-free optimization 
 
-**🏆 Best paper award of ICCP 2024**
+🏆 <span style="color:magenta">Best paper award of ICCP 2024</span>
 
 *ICCP&TPAMI 2024* | [Project page](https://shuxin626.github.io/mfo_optical_computing/index.html) | [Arxiv](https://arxiv.org/abs/2307.11957) | 
 [Guangyuan Zhao](https://zhaoguangyuan123.github.io), [Xin Shu](), [Renjie Zhou](https://www.renjiezhou.com/)
