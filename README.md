@@ -8,14 +8,16 @@ Model-free optimization optimizes the optical systems $f_{sys}(x, w)$ without re
 ### 1. This repo contains the following tasks:
 
 #### - Model-free Optimization for Optical Computing
-High-performance real-world optical computing trained by in situ gradient-based model-free optimization
-<span style="color: #FF1603;">**Best paper award of ICCP 2024**</span>
+High-performance real-world optical computing trained by in situ gradient-based model-free optimization 
+
+**🏆 Best paper award of ICCP 2024**
+
 *ICCP&TPAMI 2024* | [Project page](https://shuxin626.github.io/mfo_optical_computing/index.html) | [Arxiv](https://arxiv.org/abs/2307.11957) | 
 [Guangyuan Zhao](https://zhaoguangyuan123.github.io), [Xin Shu](), [Renjie Zhou](https://www.renjiezhou.com/)
 
 
 #### - Model-free Optimization for Computer Generated Holography
-Model-free optimization for computer generated holography
+Model-free computer generated holography
 Zhao, Guangyuan, and Renjie Zhou. TENCON 2022-2022 IEEE Region 10 Conference (TENCON). IEEE, 2022.
 
 
