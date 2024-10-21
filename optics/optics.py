@@ -1,4 +1,7 @@
-"""optical propagators under various approximating conditions
+"""optical modules
+- SLM: Spatial Light Modulator
+- BaseAreaSensor: Area Camera
+- PlaneTilt: Plane Tilt Module (used for testing)
 """
 
 from config import *

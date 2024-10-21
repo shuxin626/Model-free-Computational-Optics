@@ -1,3 +1,6 @@
+# This file contains the parameters for the optical neural network (ONN) training and testing.
+
+
 import copy
 
 settings = {

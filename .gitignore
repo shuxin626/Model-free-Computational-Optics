@@ -1,3 +1,4 @@
 data/MNIST
 runs/
 checkpoint/
+__pycache__/

@@ -1,13 +1,11 @@
 import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import StepLR
-import math
 from torch.distributions import Normal
 from config import *
 
 class PG(nn.Module):
-    """Policy gradient method for generating the next batch"""
-
+    """Policy gradient method for generating the next batch of masks."""
     def __init__(
         self,
         mask_shape=[32, 32],
