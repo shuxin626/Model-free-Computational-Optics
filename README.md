@@ -7,9 +7,9 @@
 
 | Genres | Core | Strength | Weakness |
 | --- | --- | --- | --- |
-| 🔵 **Whitebox(MBO)** | Phyiscs model | Fast; physics grounding | sim2real gap |
-| 🟣 **Graybox(MBO)** |  Phyiscs model + Real system feedback | High fidelity | Model Bias/ Computation burden |
-| 🟢 **Blackbox(MFO)** | Real system feedback | Medium fielity; easy to be effective | More hardware queries |
+|**Whitebox(MBO)** | Phyiscs model | Fast; physics grounding | sim2real gap |
+|**Graybox(MBO)** |  Phyiscs model + Real system feedback | High fidelity | Model Bias/ Computation burden |
+|**Blackbox(MFO)** | Real system feedback | Medium fielity; easy to be effective | More hardware queries |
 
 ### 2. We have examined  the following tasks:
 
