@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import StepLR
 from torch.distributions import Normal
-from config import *
+from utils.gpu_device_config import device
 
 class PG(nn.Module):
     """Policy gradient method for generating the next batch of masks."""

@@ -4,8 +4,8 @@
 - PlaneTilt: Plane Tilt Module (used for testing)
 """
 
-from config import *
-from utils.general_utils import central_crop, shift_and_crop
+from utils.gpu_device_config import device
+from utils.tensor_utils import central_crop, shift_and_crop
 import math
 import torch
 import torch.nn as nn
@@ -63,7 +63,7 @@ class PlaneTilt(nn.Module):
         # prepare titl phase map
         x = torch.tensor(range(shape[0]))
         y = torch.tensor(range(shape[1]))
-        grid_x, _ = torch.meshgrid(x, y)  # suppose only tilt along x direction
+        grid_x, _ = torch.meshgrid(x, y, indexing='ij')  # suppose only tilt along x direction
         grid_x = grid_x * dx # turn to actual length
         angle_rad = angle_deg / 180 * math.pi # turn degree to rad
         self.tilt_phase_map = grid_x * math.tan(angle_rad) / wavelength * 2 * math.pi

@@ -1,7 +1,9 @@
-from config import *
-from utils.general_utils import CkptController
+import torch
 import torch.nn as nn
 
+from trainer.classification_utils import evaluate_classification_loader
+from utils.checkpoint import CkptController
+from utils.gpu_device_config import device
 
 
 class ClassificationTester(object):
@@ -13,7 +15,7 @@ class ClassificationTester(object):
         self.ckpt_state = ckpt_controller.load_ckpt(ckpt_num)
 
 
-        self.model.phase_mask.data = torch.tensor(self.ckpt_state['net']).to(device)
+        self.model.phase_mask.data = torch.as_tensor(self.ckpt_state['net'], device=device)
         modulator_phasemask = self.model.phase_mask.data
         self.modulator_phasemask = modulator_phasemask[0, 0]
         self.dataset_for_test = dataset_for_test
@@ -25,35 +27,18 @@ class ClassificationTester(object):
     def test(self, in_ch, dataloader, number_of_type):
         # topest_mask_ind is the ind of the best mask in the batch of maskquery
         self.model.eval()
-        test_loss = 0
-        correct = 0
-        total = 0
-
-        
-        with torch.no_grad():
-            for iter_idx, (inputs, targets) in enumerate(dataloader):
-                inputs = inputs.float().to(device)
-                targets = targets.type(torch.LongTensor)
-                targets = targets.to(device)
-                
-                outputs, _ = self.model(inputs[:, in_ch,(...)], self.modulator_phasemask, if_test=True)
-
-                loss = self.criterion(outputs, targets)
-                test_loss += loss.item()
-                _, predicted = outputs.max(1)
-                total += targets.size(0)
-                correct += predicted.eq(targets).sum().item()
-                
-                if (iter_idx + 1) % 5 == 0:
-                    print('[{:6}/{:6} ({:3.0f}%)]\tLoss: {:.6f}'.format(
-                        (iter_idx + 1)* len(inputs),
-                        len(dataloader.dataset),
-                        100. * iter_idx / len(dataloader),
-                        loss.item())
-                    )
-
-        acc = 100.*correct/total
-        return acc, test_loss
+        stats = evaluate_classification_loader(
+            dataloader,
+            in_ch,
+            self.criterion,
+            forward_batch=lambda batch_inputs: self.model(
+                batch_inputs,
+                self.modulator_phasemask,
+                if_test=True,
+            )[0],
+            log_interval=5,
+        )
+        return stats.accuracy, stats.loss_sum
 
     def fit(self, number_of_type, in_ch, train_loader, val_loader, test_loader):
         result = {}

@@ -1,18 +1,15 @@
-from math import ceil
-from config import *
 from utils.visualize_utils import multi_show, plot_loss 
-from utils.general_utils import CkptController
+from utils.checkpoint import CkptController
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
-from actor.mfooptimizer import MFOOptimizer
-from trainer.basetrainer import BaseTrainer
-from torch.utils.tensorboard import SummaryWriter
+from trainer.base_trainer import BaseTrainer, create_summary_writer
+from trainer.classification_utils import ClassificationStats, evaluate_classification_loader, prepare_classification_batch
 
 class MFOClassificationTrainer(BaseTrainer):
     def __init__(self, model, settings, optimizer, actor_param, train_param, pg_type, optimizer_type='mfo', load_pretrained=False):
-        self.tb_writer = SummaryWriter()
+        self.tb_writer = create_summary_writer()
         super(MFOClassificationTrainer, self).__init__(self.tb_writer)
         self.optimizer = optimizer
         self.model = model
@@ -30,27 +27,24 @@ class MFOClassificationTrainer(BaseTrainer):
                 train_param, self.train_param['checkpoint']['clean_prev_ckpt_flag'],
                 dir_name_suffix=self.train_param['checkpoint']['dir_name_suffix'])
 
-    def perform_batch_eval(self, inputs, in_ch, mask_for_prediction=None):
-        # for subbatch mode
-        outputs_accum = torch.tensor([]).to(device)
-        iter_num_subbatch = ceil(
-            inputs.shape[0]/self.train_param['subbatch_size'])
-        for i in range(iter_num_subbatch):
-            if i < iter_num_subbatch - 1:
-                outputs_subbatch, cam_img_subbatch = self.model(inputs[int(i*self.train_param['subbatch_size']):int(
-                    (i+1)*self.train_param['subbatch_size']), in_ch, (...)], exogenous_phase_mask=mask_for_prediction, if_test=False)
-                if i == 0:
-                    # to save memory, only record the first subbatch's output images
-                    cam_img_first_subbatch = cam_img_subbatch.clone()
-                del cam_img_subbatch
-            else:
-                outputs_subbatch, cam_img_subbatch = self.model(
-                    inputs[int(i*self.train_param['subbatch_size']):, in_ch, (...)], exogenous_phase_mask=mask_for_prediction, if_test=False)
-                if i == 0:
-                    # to save memory, only record the first subbatch's output images
-                    cam_img_first_subbatch = cam_img_subbatch.clone()
-                del cam_img_subbatch
-            outputs_accum = torch.cat((outputs_accum, outputs_subbatch))
+    def perform_batch_eval(self, inputs, mask_for_prediction=None):
+        """Run the optical model in subbatches and keep the first camera image for visualization."""
+        outputs = []
+        cam_img_first_subbatch = None
+        subbatch_size = max(1, int(self.train_param['subbatch_size']))
+
+        for start in range(0, inputs.shape[0], subbatch_size):
+            outputs_subbatch, cam_img_subbatch = self.model(
+                inputs[start:start + subbatch_size],
+                exogenous_phase_mask=mask_for_prediction,
+                if_test=False,
+            )
+            if cam_img_first_subbatch is None:
+                cam_img_first_subbatch = cam_img_subbatch.clone()
+            outputs.append(outputs_subbatch)
+            del cam_img_subbatch
+
+        outputs_accum = torch.cat(outputs, dim=0)
         return outputs_accum, cam_img_first_subbatch
 
     def cal_batch_train_loss(self, targets, outputs, number_of_type):
@@ -68,40 +62,30 @@ class MFOClassificationTrainer(BaseTrainer):
         loss = torch.mean(loss, dim=0)
         return loss
 
-    def count_correct_label(self, total, correct, outputs, mask_ind_for_prediction, targets):
-        _, predicted = outputs[:, mask_ind_for_prediction, :].max(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
-        return total, correct
-
     def train(self, epoch, number_of_type, in_ch, train_loader):
         print('\nEpoch: %d' % epoch)
         self.model.train()
-        train_loss = 0
-        correct = 0
-        total = 0
+        stats = ClassificationStats()
         loss_cache = []
 
         for batch_idx, (inputs, targets) in enumerate(train_loader):
 
             with torch.no_grad():
-                inputs = inputs.float().to(device)
-                targets = targets.type(torch.LongTensor).to(device)
+                inputs, targets = prepare_classification_batch(inputs, targets, in_ch)
 
                 # inputs shape [b, ch, h, w]
                 # outputs shape [b, qb, c]
-                outputs, cam_img = self.perform_batch_eval(inputs, in_ch)
+                outputs, cam_img = self.perform_batch_eval(inputs)
                 loss = self.cal_batch_train_loss(targets, outputs, number_of_type)
 
             # topest_ind is the ind of the best mask
-            topest_mask_ind, batch_pg_loss = self.optimizer.step(-loss)
+            topest_mask_ind, _ = self.optimizer.step(-loss)
 
             mask_ind_for_prediction = topest_mask_ind
             mask_for_prediction = self.model.interp_phase_mask[0, mask_ind_for_prediction].clone().detach()
             loss_cache.append(loss[mask_ind_for_prediction].clone().cpu().detach().numpy())
-            train_loss += batch_pg_loss
             # calc correct
-            total, correct = self.count_correct_label(total, correct, outputs, mask_ind_for_prediction, targets)
+            stats.update(outputs[:, mask_ind_for_prediction, :], targets)
 
             if (batch_idx + 1) % 25 == 0 or batch_idx == (len(train_loader) - 1):
                 print('Train Epoch: {:3} [{:6}/{:6} ({:3.0f}%)]\tLoss: {:.6f}'.format(
@@ -119,7 +103,7 @@ class MFOClassificationTrainer(BaseTrainer):
                        self.train_param['optical_weight_shift'], self.train_param['optical_weight_crop_size'],
                        cam_img.shape)
 
-        acc = 100.*correct/total
+        acc = stats.accuracy
         print("avg train acc of epoch: %3d is : %3.4f" % (epoch, acc))
 
         return np.mean(loss_cache), mask_for_prediction, acc
@@ -127,37 +111,22 @@ class MFOClassificationTrainer(BaseTrainer):
     def test(self, epoch, mask_for_prediction, in_ch, test_loader, number_of_type, dataset='val'):
         # topest_mask_ind is the ind of the best mask in the batch of maskquery
         self.model.eval()
-        test_loss = 0
-        correct = 0
-        total = 0
-
-        with torch.no_grad():
-            for batch_idx, (inputs, targets) in enumerate(test_loader):
-                inputs = inputs.float().to(device)
-                targets = targets.type(torch.LongTensor)
-                targets = targets.to(device)
-                outputs, cam_image = self.perform_batch_eval(
-                    inputs, in_ch, mask_for_prediction)
-                outputs = outputs[:, 0, :]
-                loss = self.criterion_val(outputs, targets)
-                test_loss += loss.item()
-                _, predicted = outputs.max(1)
-                total += targets.size(0)
-                correct += predicted.eq(targets).sum().item()
-                if batch_idx == 0:
-                    predicted_all = predicted
-                    targets_all = targets
-                else:
-                    predicted_all = torch.cat((predicted_all, predicted))
-                    targets_all = torch.cat((targets_all, targets))
-
-        acc = 100.*correct/total
+        stats = evaluate_classification_loader(
+            test_loader,
+            in_ch,
+            self.criterion_val,
+            forward_batch=lambda batch_inputs: self.perform_batch_eval(
+                batch_inputs,
+                mask_for_prediction,
+            )[0][:, 0, :],
+        )
+        acc = stats.accuracy
         if dataset == 'train':
             print("train set acc of epoch : %3d is : %3.4f" % (epoch, acc))
         elif dataset == 'val':
             print("val set acc of epoch : %3d is : %3.4f" % (epoch, acc))
 
-        return test_loss, acc
+        return stats.loss_sum, acc
 
     def fit(self, number_of_type, in_ch, train_loader, val_loader):
         # Run training

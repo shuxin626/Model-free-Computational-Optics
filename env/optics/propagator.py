@@ -1,9 +1,9 @@
 """optical propagators under various approximating conditions
 """
 
-from config import *
+from utils.gpu_device_config import device
 import math
-from utils.general_utils import circular_pad, InterpolateComplex2d
+from utils.tensor_utils import InterpolateComplex2d, circular_pad
 import torch
 import torch.nn as nn
 

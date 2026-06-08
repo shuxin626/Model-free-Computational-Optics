@@ -9,6 +9,7 @@ settings = {
     'optimizer': 'mfo',  # {sbt, mfo, hbt}
     'train_or_test': 'train', # {train, test}
     'pg_type': 'loo',
+    'num_optical_computing_layers': 1,  # set to 2 for the two-layer simulator
 }
 
 train_param = {
@@ -91,6 +92,16 @@ optics_param = {
         'tilt': 0.0, # degree
     },
 
+    'optical_computing_layer1': {
+        'mask_representation': 'pixelwise',
+        'mask_init_type': 'rand_init',
+        'mask_num_partitions': 128,
+        'effective_shape': [512, 512],
+        'pixel_size': 8.0e-6,
+        'full_size': [1080, 1920],
+        'misalignment': [0, 0],
+    },
+
     'optical_computing_layer': {
         'mask_representation': 'pixelwise',
         'mask_init_type': 'rand_init',  # {zero_init, rand_init}
@@ -104,6 +115,15 @@ optics_param = {
         'length': 214.1e-3,
     },
     'propogator.CO': {
+        'length': 202.5e-3,
+    },
+    'propogator.IC1': {
+        'length': 214.1e-3,
+    },
+    'propogator.C1C2': {
+        'length': 214.1e-3,
+    },
+    'propogator.C2O': {
         'length': 202.5e-3,
     },
     'propogator.IO': {
@@ -120,6 +140,9 @@ optics_param = {
 }
 
 
+optics_param['optical_computing_layer2'] = copy.deepcopy(optics_param['optical_computing_layer'])
+
 # the dummy optical computing system, i.e., the system paramters we imagined.
 optics_param_dummy = copy.deepcopy(optics_param)
 optics_param['optical_computing_layer']['misalignment'] = [10, 0] # add misalignment in optics_param
+optics_param['optical_computing_layer2']['misalignment'] = optics_param['optical_computing_layer']['misalignment']

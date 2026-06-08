@@ -1,16 +1,14 @@
 
 from utils.visualize_utils import sgd_vis, plot_loss
-from utils.general_utils import CkptController
+from utils.checkpoint import CkptController
 import torch
-import torch.nn
-from trainer.basetrainer import BaseTrainer
-from config import *
+from trainer.base_trainer import BaseTrainer, create_summary_writer
+from trainer.classification_utils import ClassificationStats, evaluate_classification_loader, prepare_classification_batch
 import torch.nn as nn
-from torch.utils.tensorboard import SummaryWriter
 
 class IdealClassificationTrainer(BaseTrainer):
     def __init__(self, model, settings, ideal_optimizer_param, train_param, optics_param):
-        self.tb_writer = SummaryWriter()
+        self.tb_writer = create_summary_writer()
         super(IdealClassificationTrainer, self).__init__(self.tb_writer)
         self.model = model
 
@@ -38,64 +36,38 @@ class IdealClassificationTrainer(BaseTrainer):
     def train(self, epoch, train_loader, in_ch, number_of_type):
         print('\nEpoch: %d' % epoch)
         self.model.train()
-        train_loss = 0
-        correct = 0
-        total = 0
+        stats = ClassificationStats()
 
         for batch_idx, (inputs, targets) in enumerate(train_loader):
-            inputs = inputs.float().to(device)
-            targets = targets.type(torch.LongTensor)
-            targets = targets.to(device)
+            inputs, targets = prepare_classification_batch(inputs, targets, in_ch)
             self.optimizer.zero_grad()
 
-            outputs, cam_img = self.model(inputs[:, in_ch, (...)])
+            outputs, cam_img = self.model(inputs)
 
             loss = self.criterion(outputs, targets)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 100)
             self.optimizer.step()
 
-            train_loss += loss.item()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+            predicted = stats.update(outputs, targets, loss)
 
         sgd_vis(self.train_param, epoch, self.model, cam_img,
                 targets, inputs, number_of_type, predicted)
-        acc = 100.*correct/total
+        acc = stats.accuracy
         print("train acc of epoch at training stage: %3d is : %3.4f" %
               (epoch, acc))
         return acc
 
     def test(self, epoch, val_loader, in_ch, number_of_type, dataset='val'):
         self.model.eval()
-        acc_loss = 0
-        acc_correct = 0
-        total = 0
-
-        with torch.no_grad():
-            for batch_idx, (inputs, targets) in enumerate(val_loader):
-                inputs = inputs.float().to(device)
-                targets = targets.type(torch.LongTensor)
-                targets = targets.to(device)
-
-                outputs, cam_image = self.model(inputs[:, in_ch, (...)], if_test=True)
-
-                loss = self.criterion(outputs, targets)
-                acc_loss += loss.item()
-                _, predicted = outputs.max(1)
-                total += targets.size(0)
-                acc_correct += predicted.eq(targets).sum().item()
-
-                if batch_idx == 0:
-                    predicted_all = predicted
-                    targets_all = targets
-                else:
-                    predicted_all = torch.cat((predicted_all, predicted))
-                    targets_all = torch.cat((targets_all, targets))
-
-        acc = 100.*acc_correct/total
-        avg_loss = acc_loss/total
+        stats = evaluate_classification_loader(
+            val_loader,
+            in_ch,
+            self.criterion,
+            forward_batch=lambda batch_inputs: self.model(batch_inputs, if_test=True)[0],
+        )
+        acc = stats.accuracy
+        avg_loss = stats.mean_loss_per_sample
         if dataset == 'train':
             print(
                 "train set acc of epoch after training stage: %3d is : %3.4f" % (epoch, acc))

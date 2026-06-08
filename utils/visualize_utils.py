@@ -3,12 +3,17 @@
 """_utils functions for visualization purposes_
 """
 
+import os
+
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/model_free_computational_optics_matplotlib")
+os.environ.setdefault("XDG_CACHE_HOME", "/tmp/model_free_computational_optics_cache")
+os.makedirs(os.environ["MPLCONFIGDIR"], exist_ok=True)
+os.makedirs(os.environ["XDG_CACHE_HOME"], exist_ok=True)
+
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
-from utils.general_utils import convert_tensor_to_cpu, shift_list
-from sklearn.metrics import confusion_matrix
-import os
+from utils.tensor_utils import convert_tensor_to_cpu, shift_list
 
 def calculate_rect_params(img_shape, centersize, two_d_shift):
     img_shape = list(img_shape)
@@ -110,7 +115,8 @@ def multi_show(epoch, inputs, phase_mask, cam_img, targets, num_classes, display
                     ax_camimg, cam_img[ind], rect_list=rect_list_all_type[:num_classes], target=label_in_batch[row])
                 # print('row {}, col {} is precited as {}'.format(row, col, pred[ind]))
         if display_settings['save'] is True:
-            plt.savefig('imgs/cam_img.png')
+            os.makedirs('assets', exist_ok=True)
+            plt.savefig('assets/cam_img.png')
         plt.show()
 
 

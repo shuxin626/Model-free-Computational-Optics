@@ -8,8 +8,8 @@ np.random.seed(12345)
 torch.manual_seed(12345)
 
 
-def dataio(dataset_name, input_type, obj_height, obj_width=300, batch_size=16, type_idx_list=None, num_per_type_train=None,
-           num_per_type_test=None, num_per_type_val=None, shuffle_data=True,):
+def load_data(dataset_name, input_type, obj_height, obj_width=300, batch_size=16, type_idx_list=None, num_per_type_train=None,
+              num_per_type_test=None, num_per_type_val=None, shuffle_data=True,):
 
     transform_list = [transforms.ToTensor(), transforms.Resize([obj_height, obj_width]),
                       TurnToPhaseamp()]
@@ -63,7 +63,5 @@ def dataio(dataset_name, input_type, obj_height, obj_width=300, batch_size=16, t
         ch = [1]
 
     return train_loader, val_loader, test_loader, ch, number_of_type
-
-
 
 

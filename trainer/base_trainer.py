@@ -1,4 +1,21 @@
 
+class NullSummaryWriter(object):
+    def add_scalar(self, *args, **kwargs):
+        pass
+
+    def flush(self):
+        pass
+
+
+def create_summary_writer():
+    try:
+        from torch.utils.tensorboard import SummaryWriter
+        return SummaryWriter()
+    except Exception as exc:
+        print("TensorBoard writer disabled: {}".format(exc))
+        return NullSummaryWriter()
+
+
 class BaseTrainer(object):
     def __init__(self, tb_writer):
         self.tb_writer = tb_writer
@@ -37,4 +54,3 @@ class BaseTrainer(object):
         self.tb_writer.flush()
           
         return result_lst, best_result, early_stop_counter
-
