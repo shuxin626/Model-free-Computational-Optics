@@ -9,9 +9,9 @@ Model-free optimization optimizes the optical systems $f_{sys}(x, w)$ without re
 
 | Paradigm | Uses | Strength | Cost |
 | --- | --- | --- | --- |
-| 🔵 **Whitebox** | Differentiable simulator | Fast gradients; easy ablations | Simulator-real gap |
-| 🟣 **Graybox** | Partial model + calibration | Uses physics and measurements | Calibration burden |
-| 🟢 **Blackbox / model-free** | Real system as oracle | Direct in-situ optimization | More hardware queries |
+| <span style="color:#f2f2f2">●</span> **Whitebox** | Differentiable simulator | Fast gradients; easy ablations | Simulator-real gap |
+| <span style="color:#8a8f98">●</span> **Graybox** | Partial model + calibration | Uses physics and measurements | Calibration burden |
+| <span style="color:#111111">●</span> **Blackbox / model-free** | Real system as oracle | Direct in-situ optimization | More hardware queries |
 
 ### 2. This repo contains the following tasks:
 
