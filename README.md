@@ -50,8 +50,9 @@ See [docs/details.md](docs/details.md) for optical computing (1- and 2-layer sim
 
 Not only us that pushing the direction of model-free computational optics: 
 
->a. [Li et al., Model-free optical processors using in situ reinforcement learning with proximal policy optimization](https://www.nature.com/articles/s41377-025-02148-7)
-Direct followup work that used PPO as core algo for model-free computational optics.
+a. [Li et al., Model-free optical processors using in situ reinforcement learning with proximal policy optimization](https://www.nature.com/articles/s41377-025-02148-7)
+>Direct followup work that used PPO as core algo for model-free computational optics.
+
 b. [More will come ...]()
 
 
