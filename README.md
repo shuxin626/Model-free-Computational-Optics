@@ -21,7 +21,7 @@ The task illustrations are AI-generated assets. The prompts and OpenAI API scrip
 
 #### a. MFO for Optical Computing
 
-<span style="color:magenta">Best paper award of ICCP 2024</span>
+🏆 <span style="color:magenta">Best paper award of ICCP 2024</span>
 
 *ICCP&TPAMI 2024* | [Project page](https://shuxin626.github.io/mfo_optical_computing/index.html) | [Arxiv](https://arxiv.org/abs/2307.11957) | [Guangyuan Zhao](https://zhaoguangyuan123.github.io), [Xin Shu](), [Renjie Zhou](https://www.renjiezhou.com/)
 
